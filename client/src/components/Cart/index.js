@@ -5,23 +5,18 @@ import { QUERY_CHECKOUT } from "../../utils/queries"
 import { idbPromise } from "../../utils/helpers"
 import CartItem from "../CartItem";
 import Auth from "../../utils/auth";
-import { useStoreContext } from "../../utils/GlobalState";
 import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
 import "./style.css";
+import { useDispatch, useSelector } from 'react-redux';
 
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
 const Cart = () => {
-  const [state, dispatch] = useStoreContext();
+
   const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
 
-  useEffect(() => {
-    if (data) {
-      stripePromise.then((res) => {
-        res.redirectToCheckout({ sessionId: data.checkout.session })
-      })
-    }
-  }, [data]);
+  const state = useSelector((state) => state);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     async function getCart() {
@@ -33,6 +28,15 @@ const Cart = () => {
       getCart();
     }
   }, [state.cart.length, dispatch]);
+
+  useEffect(() => {
+    if (data) {
+      console.log(data);
+      stripePromise.then((res) => {
+        res.redirectToCheckout({ sessionId: data.checkout.session });
+      });
+    }
+  }, [data]);
 
   function toggleCart() {
     dispatch({ type: TOGGLE_CART });
@@ -87,20 +91,20 @@ const Cart = () => {
               Auth.loggedIn() ?
                 <button onClick={submitCheckout}>
                   Checkout
-              </button>
+                </button>
                 :
                 <span>(log in to check out)</span>
             }
           </div>
         </div>
       ) : (
-          <h3>
-            <span role="img" aria-label="shocked">
-              😱
+        <h3>
+          <span role="img" aria-label="shocked">
+            😱
           </span>
           You haven't added anything to your cart yet!
-          </h3>
-        )}
+        </h3>
+      )}
     </div>
   );
 };
